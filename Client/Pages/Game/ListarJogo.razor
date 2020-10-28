@@ -1,0 +1,56 @@
+@page  "/Game/ListarJogo"
+@using System.Net.Http
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<h3>Jogos</h3>
+
+<div class="card-body">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Nome do Jogo</th>
+                <th scope="col">ID do Genero</th>
+                <th scope="col">Nome do Genero</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in GameList)
+            {
+            <tr>
+                <td>@item.ID</td>
+                <td>@item.Jogo_Nome</td>
+                <td>@item.Generos.ID</td>
+                <td>@item.Generos.Genero_Nome</td>
+                <td>
+                    <a href="/Game/EditarJogo/@item.ID.ToString()" ><button class="btn btn-success">Editar</button></a>
+                    <button class="btn btn-danger" @onclick="@(() => Delete_Game(item.ID))">Delete</button>
+                </td>
+            </tr>
+            }   
+        </tbody>
+    </table>
+</div>
+
+@code {
+
+    private List<Game> GameList = new List<Game>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var Jogos = await Http.GetFromJsonAsync<List<Game>>("/Game/List");
+        foreach (var item in Jogos)
+        {
+            GameList.Add(item);
+        }
+    }
+
+    private async Task Delete_Game(int itemID)
+    {
+        //call controller
+        await Http.DeleteAsync("/Game/Delete/"+itemID);
+        NavigationManager.NavigateTo("/Game/ListarJogo", true);
+    }
+
+}

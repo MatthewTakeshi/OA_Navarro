@@ -1,0 +1,73 @@
+@page  "/gamedto/EditarJogo"
+@page "/gamedto/EditarJogo/{Item}"
+@using System.Net.Http
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+<div class="card m-3">
+    <h4 class="card-header">Atualizar gamedto</h4>
+    <div class="card-body">
+        <EditForm Model="@gamedto" OnValidSubmit="HandleValidSubmit" @onreset="HandleReset">
+            <DataAnnotationsValidator />
+            <div class="form-row">
+                <div class="form-group col-5">
+                    <label>ID do gamedto</label>
+                    <InputNumber @bind-Value="gamedto.Jogo_ID" class="form-control" />
+                    <ValidationMessage For="@(() => gamedto.Jogo_ID)" />
+                </div>
+                <div class="form-group col-5">
+                    <label>Nome do gamedto</label>
+                    <InputText @bind-Value="gamedto.Jogo_Nome" class="form-control" />
+                    <ValidationMessage For="@(() => gamedto.Jogo_Nome)" />
+                </div>
+                <div class="form-group col-5">
+                    <label>Nome do Genero</label>
+                    <InputSelect @bind-Value="gamedto.Generos">
+                    <option value="">Select</option>
+                    @foreach (var genero in GeneroList)
+                            {
+                                <option value="@genero.ID">@genero.Genero_Nome</option>
+                            }
+                        </InputSelect>
+                </div>
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary mr-1">Salvar</button>
+                <button type="reset" class="btn btn-secondary">Cancelar</button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+
+    private GameDto gamedto = new GameDto();
+    private List<Genero> GeneroList = new List<Genero>();
+    [Parameter]
+    public string Item { get; set; }
+    private EditContext editContext { get; set; }
+    protected override async Task OnInitializedAsync()
+    {
+        var itemId = Item;
+        gamedto = await Http.GetFromJsonAsync<GameDto>($"/Game/GetById?id={itemId}");
+        editContext = new EditContext(gamedto);
+        var Generos = await Http.GetFromJsonAsync<List<Genero>>("/Genero/List");
+        foreach (var item in Generos)
+        {
+            GeneroList.Add(item);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        //Enviar dados para o Controller no Backend
+        var teste = await Http.PutAsJsonAsync("/Game/Update", gamedto);
+        NavigationManager.NavigateTo("Game/ListarJogo");
+    }
+
+    private void HandleReset()
+    {
+        gamedto = new GameDto();
+        editContext = new EditContext(gamedto);
+    }
+}
